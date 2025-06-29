@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AI Chat Assistant</title>
+  <style>
+    body { font-family: Arial; background: #f4f4f4; padding: 20px; }
+    .chat-box { width: 100%; max-width: 600px; margin: auto; background: #fff; padding: 20px; border-radius: 10px; }
+    .msg { margin-bottom: 10px; }
+    .user { color: blue; font-weight: bold; }
+    .bot { color: green; }
+    input[type="text"] { width: 80%; padding: 10px; }
+    button { padding: 10px; }
+  </style>
+</head>
+<body>
+  <div class="chat-box" id="chat-box">
+    <h2>🤖 AI Personal Assistant</h2>
+    <div id="messages"></div>
+    <input type="text" id="messageInput" placeholder="Type your message..." />
+    <button onclick="sendMessage()">Send</button>
+  </div>
+
+  <script>
+    async function sendMessage() {
+      const input = document.getElementById("messageInput");
+      const msg = input.value;
+      if (!msg.trim()) return;
+
+      // Show user message
+      const messagesDiv = document.getElementById("messages");
+      messagesDiv.innerHTML += `<div class="msg user">You: ${msg}</div>`;
+
+      // Send to backend
+      const res = await fetch("/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: "user1", message: msg })
+      });
+
+      const data = await res.json();
+      messagesDiv.innerHTML += `<div class="msg bot">Bot: ${data.response}</div>`;
+
+      input.value = "";
+    }
+  </script>
+</body>
+</html>

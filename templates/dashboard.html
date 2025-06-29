@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AI Assistant Dashboard</title>
+  <meta charset='utf-8' />
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet" />
+
+  <style>
+    body {
+      display: flex;
+      margin: 0;
+      height: 100vh;
+      font-family: Arial, sans-serif;
+    }
+    .chat {
+      width: 50%;
+      padding: 20px;
+      border-right: 1px solid #ccc;
+      display: flex;
+      flex-direction: column;
+    }
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    .input-box {
+      display: flex;
+    }
+    .input-box input {
+      flex: 1;
+      padding: 10px;
+    }
+    .input-box button {
+      padding: 10px;
+    }
+    .calendar {
+      width: 50%;
+      padding: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Left side: Chat -->
+  <div class="chat">
+    <h3>🤖 AI Assistant</h3>
+    <div class="messages" id="messages"></div>
+    <div class="input-box">
+      <input type="text" id="user-input" placeholder="Type a message..." />
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+
+  <!-- Right side: Calendar -->
+  <div class="calendar">
+    <h3>📅 Reminders</h3>
+    <div id='calendar'></div>
+  </div>
+
+  <script>
+    const messagesDiv = document.getElementById("messages");
+
+    async function sendMessage() {
+      const input = document.getElementById("user-input");
+      const message = input.value.trim();
+      if (!message) return;
+
+      // Show user message
+      const userMsg = document.createElement("p");
+      userMsg.textContent = "You: " + message;
+      messagesDiv.appendChild(userMsg);
+
+      // Send to backend
+      const response = await fetch("/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: message, user_id: "default" })
+      });
+
+      const data = await response.json();
+      const botMsg = document.createElement("p");
+      botMsg.textContent = "Bot: " + data.response;
+      messagesDiv.appendChild(botMsg);
+      input.value = "";
+
+      // Scroll down
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+      // Refresh calendar
+      refreshCalendar();
+    }
+
+    // FullCalendar setup
+    let calendar;
+    document.addEventListener('DOMContentLoaded', async function () {
+      const calendarEl = document.getElementById('calendar');
+
+      calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        events: []
+      });
+
+      calendar.render();
+      refreshCalendar();
+    });
+
+    async function refreshCalendar() {
+      const res = await fetch('/reminders-json');
+      const events = await res.json();
+      calendar.removeAllEvents();
+      events.forEach(event => calendar.addEvent(event));
+    }
+
+  </script>
+
+</body>
+</html>
